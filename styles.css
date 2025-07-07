@@ -1,0 +1,110 @@
+/* styles.css */
+
+/* Custom properties for colors */
+:root {
+    --primary-color: #000000; /* Black */
+    --secondary-color: #007bff; /* Blue */
+}
+
+/* Apply custom properties to Tailwind's utility classes */
+.bg-primary {
+    background-color: var(--primary-color);
+}
+
+.text-primary {
+    color: var(--primary-color);
+}
+
+.bg-secondary {
+    background-color: var(--secondary-color);
+}
+
+.text-secondary {
+    color: var(--secondary-color);
+}
+
+.border-secondary {
+    border-color: var(--secondary-color);
+}
+
+/* Basic body styling */
+body {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Ensure full screen height and center content */
+html, body {
+    height: 100%;
+    overflow: hidden; /* Prevent scrolling */
+}
+
+/* Additional styling for the sign-in screen and elements */
+#signin-screen {
+    background-color: rgba(31, 41, 55, 0.9); /* Dark gray with some transparency */
+    border-radius: 0.75rem; /* rounded-lg */
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1); /* shadow-lg */
+    padding: 2rem; /* p-8 */
+    max-width: 28rem; /* max-w-md */
+    width: 100%;
+}
+
+#google-signin-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem; /* py-3 px-6 */
+    border-radius: 9999px; /* rounded-full */
+    font-weight: 700; /* font-bold */
+    transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+    transition-duration: 300ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); /* ease-in-out */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* shadow-lg */
+}
+
+#google-signin-button:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+}
+
+/* Styling for the loading overlay */
+#loading-overlay {
+    background-color: rgba(0, 0, 0, 0.75); /* Black with transparency */
+}
+
+/* Spinner animation */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* Sign out button */
+#signout-button {
+    border-radius: 9999px; /* rounded-full */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* shadow-lg */
+    transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+    transition-duration: 300ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); /* ease-in-out */
+}
+
+#signout-button:hover {
+    background-color: #c53030; /* Darker red on hover */
+}
+
+/* Message Box Styling */
+#message-box {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translate(-50%, -60%); }
+    to { opacity: 1; transform: translate(-50%, -50%); }
+}
