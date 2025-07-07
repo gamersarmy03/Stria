@@ -698,13 +698,15 @@
                 const message = {
                     senderId: senderId,
                     text: messageText,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    // Use client-side timestamp for the message object within the array
+                    timestamp: new Date()
                 };
 
                 await chatDocRef.set({
                     participants: [senderId, receiverId],
                     lastMessage: messageText,
-                    lastMessageTimestamp: message.timestamp,
+                    // Use server timestamp for the top-level lastMessageTimestamp field
+                    lastMessageTimestamp: firebase.firestore.FieldValue.serverTimestamp(),
                     messages: firebase.firestore.FieldValue.arrayUnion(message) // Add message to array
                 }, { merge: true }); // Merge to update fields or create if not exists
 
@@ -750,7 +752,13 @@
             }
 
             // Sort messages by timestamp if they are not already (Firestore arrayUnion doesn't guarantee order)
-            messages.sort((a, b) => (a.timestamp?.toMillis() || 0) - (b.timestamp?.toMillis() || 0));
+            // Handle both Firestore Timestamp objects and JavaScript Date objects
+            messages.sort((a, b) => {
+                const timestampA = a.timestamp instanceof firebase.firestore.Timestamp ? a.timestamp.toMillis() : a.timestamp?.getTime() || 0;
+                const timestampB = b.timestamp instanceof firebase.firestore.Timestamp ? b.timestamp.toMillis() : b.timestamp?.getTime() || 0;
+                return timestampA - timestampB;
+            });
+
 
             messages.forEach(msg => {
                 const messageDiv = document.createElement('div');
