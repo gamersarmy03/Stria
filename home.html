@@ -228,7 +228,8 @@
 
             <!-- Chat Modal -->
             <div id="chat-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden">
-                <div class="bg-gray-800 rounded-none p-6 w-full h-full flex flex-col relative shadow-lg modal-enter-active">
+                <!-- Changed: max-w-xl and h-5/6 for a larger, but not full-screen, chat modal -->
+                <div class="bg-gray-800 rounded-xl p-6 w-full max-w-xl h-5/6 flex flex-col relative shadow-lg modal-enter-active">
                     <button id="close-chat-modal" class="absolute top-3 right-3 text-white hover:text-gray-400 text-3xl font-light">&times;</button>
                     <div class="flex items-center mb-4">
                         <img id="chat-other-dp" src="https://placehold.co/50x50/000/fff?text=DP" alt="Other User DP" class="w-12 h-12 rounded-full mr-3 border-2 border-secondary object-cover">
@@ -458,12 +459,12 @@
             messageInput.value = '';
             chatMessageStatus.textContent = '';
 
-            // Make chat modal full screen
+            // Make chat modal larger, but not full screen
             chatModal.classList.remove('hidden');
             chatModal.classList.add('modal-enter-active');
-            // Add full screen classes to the inner content div of the chat modal
-            chatModal.querySelector('div').classList.remove('max-w-md', 'h-3/4');
-            chatModal.querySelector('div').classList.add('w-full', 'h-full', 'rounded-none');
+            // Removed full screen classes from the inner content div of the chat modal
+            // The max-w-xl and h-5/6 are now directly in the HTML for the chat-modal's inner div
+            // No need to dynamically add/remove these specific classes here.
 
 
             // Start listening for messages
@@ -476,10 +477,7 @@
             chatModal.addEventListener('animationend', function handler() {
                 chatModal.classList.add('hidden');
                 chatModal.classList.remove('modal-leave-active');
-                // Revert full screen classes on close
-                chatModal.querySelector('div').classList.add('max-w-md', 'h-3/4');
-                chatModal.querySelector('div').classList.remove('w-full', 'h-full', 'rounded-none');
-
+                // No need to revert full screen classes here as they are no longer dynamically added
                 chatModal.removeEventListener('animationend', handler);
                 if (currentChatListener) {
                     currentChatListener(); // Unsubscribe from previous chat listener
