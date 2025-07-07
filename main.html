@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stria - Chatting Website</title>
+    <!-- Tailwind CSS CDN for utility classes -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Custom styles -->
+    <link rel="stylesheet" href="styles.css">
+    <!-- Font: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-primary text-white flex items-center justify-center min-h-screen">
+    <!-- Loading overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-secondary"></div>
+    </div>
+
+    <!-- Message Box -->
+    <div id="message-box" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900 text-white p-6 rounded-lg shadow-xl z-50 hidden border border-secondary">
+        <p id="message-text" class="text-lg mb-4 text-center"></p>
+        <button id="message-close-button" class="bg-secondary hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full w-full">OK</button>
+    </div>
+
+    <!-- Sign-in Screen -->
+    <div id="signin-screen" class="flex flex-col items-center justify-center p-8 rounded-lg shadow-lg bg-gray-800 bg-opacity-90 max-w-md w-full">
+        <h1 class="text-4xl font-bold mb-6 text-secondary">Stria</h1>
+        <p class="text-lg text-center mb-8">Welcome to Stria! Please sign in to continue.</p>
+        <button id="google-signin-button" class="bg-secondary hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-full shadow-lg transition duration-300 ease-in-out flex items-center space-x-3">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12.24 10.27c.33.78.5 1.64.5 2.55 0 3.05-1.97 5.27-5.83 5.27-3.9 0-6.84-3.08-6.84-6.93s2.94-6.93 6.84-6.93c2.13 0 3.89.87 5.17 2.06l2.36-2.36C16.82 2.87 14.6 2 12.24 2 6.87 2 2.5 6.47 2.5 12s4.37 10 9.74 10c6.19 0 10.04-4.32 10.04-9.75 0-.7-.08-1.37-.2-2.02H12.24z" fill="#F4B400"/>
+                <path d="M21.8 12.01c0-.7-.08-1.37-.2-2.02H12.24v3.91h5.83c-.33 1.64-1.37 2.99-3.1 4.1l2.36 2.36c1.4-1.29 2.5-2.92 3.1-4.85z" fill="#4285F4"/>
+            </svg>
+            <span>Sign in with Google</span>
+        </button>
+    </div>
+
+    <!-- Home Screen (initially hidden) -->
+    <div id="home-screen" class="fixed inset-0 bg-black hidden flex flex-col items-center justify-center p-4">
+        <div class="absolute top-4 right-4 flex items-center space-x-4">
+            <div class="flex items-center space-x-2">
+                <img id="user-dp" src="https://placehold.co/60x60/333333/FFFFFF?text=DP" alt="User Display Picture" class="w-12 h-12 rounded-full border-2 border-secondary object-cover">
+                <span id="user-id-display" class="text-sm text-gray-400 truncate max-w-[100px]"></span>
+            </div>
+            <button id="signout-button" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full shadow-lg transition duration-300 ease-in-out">
+                Sign Out
+            </button>
+        </div>
+
+        <h2 class="text-white text-3xl font-semibold mb-8">Welcome to Stria!</h2>
+
+        <div class="flex flex-col items-center space-y-4">
+            <button id="upload-dp-button" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full shadow-lg transition duration-300 ease-in-out">
+                Upload Display Picture
+            </button>
+            <input type="file" id="dp-file-input" accept="image/*" class="hidden">
+            <p class="text-sm text-gray-400 text-center max-w-md">
+                (Note: In a real application, DP and media storage would be handled by a secure backend server interacting with Internet Archive's API. This is a client-side simulation.)
+            </p>
+        </div>
+    </div>
+
+    <!-- Link to external script.js -->
+    <script type="module" src="script.js"></script>
+</body>
+</html>
