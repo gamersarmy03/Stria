@@ -3,70 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stria - Chatting Website</title>
-    <!-- Tailwind CSS CDN for utility classes -->
+    <title>Stria Chat</title>
+    <!-- Tailwind CSS CDN for modern styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Custom styles -->
-    <link rel="stylesheet" href="styles.css">
-    <!-- Font: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
+        /* Custom styles for primary and secondary colors and font */
         body {
             font-family: 'Inter', sans-serif;
+            background-color: #000000; /* Primary color: Black */
+            color: #ffffff; /* White text for contrast */
+        }
+        .bg-primary {
+            background-color: #000000;
+        }
+        .bg-secondary {
+            background-color: #0000ff; /* Secondary color: Blue */
+        }
+        .text-secondary {
+            color: #0000ff;
+        }
+        .border-secondary {
+            border-color: #0000ff;
+        }
+        /* Hide elements initially until content is ready */
+        [v-cloak] {
+            display: none;
         }
     </style>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
 </head>
-<body class="bg-primary text-white flex items-center justify-center min-h-screen">
-    <!-- Loading overlay -->
-    <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
-        <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-secondary"></div>
-    </div>
+<body class="bg-primary flex items-center justify-center min-h-screen p-4">
+    <div id="app" class="w-full max-w-md bg-gray-900 bg-opacity-70 rounded-xl shadow-lg p-8 space-y-6 flex flex-col items-center" v-cloak>
+        <!-- Login Screen -->
+        <section id="login-screen" class="w-full text-center" style="display: none;">
+            <h1 class="text-4xl font-bold mb-6">Welcome to Stria</h1>
+            <p class="text-gray-300 mb-8">Sign in to start chatting.</p>
+            <button id="google-signin-button"
+                    class="bg-secondary hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-full transition duration-300 ease-in-out shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75">
+                Sign in with Google
+            </button>
+            <p id="error-message" class="text-red-500 mt-4 text-sm"></p>
+        </section>
 
-    <!-- Message Box -->
-    <div id="message-box" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900 text-white p-6 rounded-lg shadow-xl z-50 hidden border border-secondary">
-        <p id="message-text" class="text-lg mb-4 text-center"></p>
-        <button id="message-close-button" class="bg-secondary hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full w-full">OK</button>
-    </div>
-
-    <!-- Sign-in Screen -->
-    <div id="signin-screen" class="flex flex-col items-center justify-center p-8 rounded-lg shadow-lg bg-gray-800 bg-opacity-90 max-w-md w-full">
-        <h1 class="text-4xl font-bold mb-6 text-secondary">Stria</h1>
-        <p class="text-lg text-center mb-8">Welcome to Stria! Please sign in to continue.</p>
-        <button id="google-signin-button" class="bg-secondary hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-full shadow-lg transition duration-300 ease-in-out flex items-center space-x-3">
-            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12.24 10.27c.33.78.5 1.64.5 2.55 0 3.05-1.97 5.27-5.83 5.27-3.9 0-6.84-3.08-6.84-6.93s2.94-6.93 6.84-6.93c2.13 0 3.89.87 5.17 2.06l2.36-2.36C16.82 2.87 14.6 2 12.24 2 6.87 2 2.5 6.47 2.5 12s4.37 10 9.74 10c6.19 0 10.04-4.32 10.04-9.75 0-.7-.08-1.37-.2-2.02H12.24z" fill="#F4B400"/>
-                <path d="M21.8 12.01c0-.7-.08-1.37-.2-2.02H12.24v3.91h5.83c-.33 1.64-1.37 2.99-3.1 4.1l2.36 2.36c1.4-1.29 2.5-2.92 3.1-4.85z" fill="#4285F4"/>
-            </svg>
-            <span>Sign in with Google</span>
-        </button>
-    </div>
-
-    <!-- Home Screen (initially hidden) -->
-    <div id="home-screen" class="fixed inset-0 bg-black hidden flex flex-col items-center justify-center p-4">
-        <div class="absolute top-4 right-4 flex items-center space-x-4">
-            <div class="flex items-center space-x-2">
-                <img id="user-dp" src="https://placehold.co/60x60/333333/FFFFFF?text=DP" alt="User Display Picture" class="w-12 h-12 rounded-full border-2 border-secondary object-cover">
-                <span id="user-id-display" class="text-sm text-gray-400 truncate max-w-[100px]"></span>
-            </div>
-            <button id="signout-button" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full shadow-lg transition duration-300 ease-in-out">
+        <!-- Home Screen -->
+        <section id="home-screen" class="w-full text-center" style="display: none;">
+            <h1 class="text-4xl font-bold mb-4">Stria Home</h1>
+            <p class="text-gray-300 mb-8">Welcome back! This is your current black screen. More features coming soon!</p>
+            <button id="sign-out-button"
+                    class="bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-full transition duration-300 ease-in-out shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-75">
                 Sign Out
             </button>
-        </div>
-
-        <h2 class="text-white text-3xl font-semibold mb-8">Welcome to Stria!</h2>
-
-        <div class="flex flex-col items-center space-y-4">
-            <button id="upload-dp-button" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full shadow-lg transition duration-300 ease-in-out">
-                Upload Display Picture
-            </button>
-            <input type="file" id="dp-file-input" accept="image/*" class="hidden">
-            <p class="text-sm text-gray-400 text-center max-w-md">
-                (Note: In a real application, DP and media storage would be handled by a secure backend server interacting with Internet Archive's API. This is a client-side simulation.)
-            </p>
-        </div>
+        </section>
     </div>
 
-    <!-- Link to external script.js -->
-    <script type="module" src="script.js"></script>
+    <script>
+        // Firebase Configuration (Replace with your actual config)
+        const firebaseConfig = {
+            apiKey: "AIzaSyAXS0Mr9A9EgNHAr7tmtAkS0b2JyVdaHXc",
+            authDomain: "stria-chat.firebaseapp.com",
+            projectId: "stria-chat",
+            storageBucket: "stria-chat.firebasestorage.app",
+            messagingSenderId: "742772667117",
+            appId: "1:742772667117:web:d748e7f308e272073512e4",
+            measurementId: "G-3DX8081MT7"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        const auth = firebase.auth();
+        const db = firebase.firestore(); // Firestore for potential future use (chat messages, user profiles)
+
+        // Get elements
+        const appContainer = document.getElementById('app');
+        const loginScreen = document.getElementById('login-screen');
+        const homeScreen = document.getElementById('home-screen');
+        const googleSignInButton = document.getElementById('google-signin-button');
+        const signOutButton = document.getElementById('sign-out-button');
+        const errorMessage = document.getElementById('error-message');
+
+        // Function to show/hide screens
+        function showScreen(screenId) {
+            loginScreen.style.display = 'none';
+            homeScreen.style.display = 'none';
+            document.getElementById(screenId).style.display = 'block';
+            appContainer.removeAttribute('v-cloak'); // Show app container once content is ready
+        }
+
+        // Event listener for Google Sign-in
+        googleSignInButton.addEventListener('click', () => {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider)
+                .then((result) => {
+                    // User signed in successfully. onAuthStateChanged will handle screen change.
+                    console.log('User signed in:', result.user.displayName);
+                    errorMessage.textContent = ''; // Clear any previous errors
+                })
+                .catch((error) => {
+                    // Handle Errors here.
+                    const errorMessageText = error.message;
+                    console.error('Google Sign-in Error:', errorMessageText);
+                    errorMessage.textContent = `Error: ${errorMessageText}`;
+                });
+        });
+
+        // Event listener for Sign Out
+        signOutButton.addEventListener('click', () => {
+            auth.signOut().then(() => {
+                // Sign-out successful. onAuthStateChanged will handle screen change.
+                console.log('User signed out.');
+            }).catch((error) => {
+                // An error happened.
+                console.error('Sign out error:', error);
+                errorMessage.textContent = `Sign out error: ${error.message}`;
+            });
+        });
+
+        // Firebase Auth State Observer
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                // User is signed in, show home screen
+                showScreen('home-screen');
+            } else {
+                // User is signed out, show login screen
+                showScreen('login-screen');
+            }
+        });
+    </script>
 </body>
 </html>
