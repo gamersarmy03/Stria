@@ -42,6 +42,21 @@
         .hamburger-icon:hover span {
             background-color: #0000ff; /* Secondary color on hover */
         }
+        /* Custom animation for profile popup */
+        @keyframes slideInLeft {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+        @keyframes slideOutLeft {
+            from { transform: translateX(0); }
+            to { transform: translateX(-100%); }
+        }
+        .profile-popup-enter-active {
+            animation: slideInLeft 0.3s ease-out forwards;
+        }
+        .profile-popup-leave-active {
+            animation: slideOutLeft 0.3s ease-in forwards;
+        }
     </style>
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
@@ -62,11 +77,11 @@
         </section>
 
         <!-- Home Screen -->
-        <section id="home-screen" class="w-full text-center relative" style="display: none;">
+        <section id="home-screen" class="w-full h-full text-center relative flex flex-col" style="display: none;">
             <!-- Top Navigation Bar -->
-            <div class="absolute top-0 left-0 right-0 flex justify-between items-center p-4">
+            <div class="flex justify-between items-center p-4 w-full">
                 <!-- Hamburger Menu Button (Top Left) -->
-                <button id="hamburger-menu-button" class="p-2 rounded-full hover:bg-gray-700 transition duration-200">
+                <button id="hamburger-menu-button" class="p-2 rounded-full hover:bg-gray-700 transition duration-200 z-10">
                     <div class="hamburger-icon">
                         <span></span>
                         <span></span>
@@ -75,24 +90,47 @@
                 </button>
 
                 <!-- Search Button (Top Right) -->
-                <button id="search-button" class="p-2 rounded-full hover:bg-gray-700 transition duration-200">
+                <button id="search-button" class="p-2 rounded-full hover:bg-gray-700 transition duration-200 z-10">
                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                     </svg>
                 </button>
             </div>
 
-            <h1 class="text-4xl font-bold mt-16 mb-4">Stria Home</h1>
-            <p class="text-gray-300 mb-8">Welcome back! This is your current black screen. More features coming soon!</p>
-            <button id="sign-out-button"
-                    class="bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-full transition duration-300 ease-in-out shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-75">
-                Sign Out
-            </button>
+            <!-- Main Home Content -->
+            <div class="flex-grow flex flex-col items-center justify-center p-4">
+                <h1 class="text-4xl font-bold mb-4">Stria Home</h1>
+                <p class="text-gray-300 mb-8">Welcome back! This is your current black screen. More features coming soon!</p>
+                <button id="sign-out-button"
+                        class="bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-full transition duration-300 ease-in-out shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-75">
+                    Sign Out
+                </button>
+            </div>
+
+            <!-- Profile Pop-up (Side Drawer style) -->
+            <div id="profile-popup" class="fixed top-0 left-0 h-full w-64 bg-gray-900 bg-opacity-95 shadow-xl transform -translate-x-full transition-transform duration-300 ease-in-out z-40">
+                <div class="p-6 flex flex-col items-center h-full relative">
+                    <button id="close-profile-popup" class="absolute top-3 right-3 text-white hover:text-gray-400 text-3xl font-light">&times;</button>
+                    <img id="profile-dp" src="https://placehold.co/100x100/000/fff?text=DP" alt="Profile Picture" class="w-24 h-24 rounded-full mx-auto mb-4 border-2 border-secondary object-cover">
+                    <p id="profile-name" class="text-xl font-bold mb-1 text-white"></p>
+                    <p id="profile-email" class="text-gray-400 text-sm mb-2"></p>
+                    <p id="profile-username" class="text-gray-300 text-sm">Username: <span class="font-semibold">Not Set</span></p>
+                    <!-- Additional menu items can go here -->
+                    <div class="mt-8 w-full">
+                        <button class="w-full text-left py-2 px-4 rounded-md hover:bg-gray-700 transition duration-200 text-white">Settings</button>
+                        <button class="w-full text-left py-2 px-4 rounded-md hover:bg-gray-700 transition duration-200 text-white mt-2">Privacy</button>
+                        <button class="w-full text-left py-2 px-4 rounded-md hover:bg-gray-700 transition duration-200 text-white mt-2">Help</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Overlay for closing popup when clicking outside -->
+            <div id="profile-popup-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden"></div>
         </section>
     </div>
 
     <script>
-        // Firebase Configuration (Replace with your actual config)
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyAXS0Mr9A9EgNHAr7tmtAkS0b2JyVdaHXc",
             authDomain: "stria-chat.firebaseapp.com",
@@ -107,7 +145,7 @@
         firebase.initializeApp(firebaseConfig);
 
         const auth = firebase.auth();
-        const db = firebase.firestore(); // Firestore for potential future use (chat messages, user profiles)
+        const db = firebase.firestore();
 
         // Get elements
         const appContainer = document.getElementById('app');
@@ -117,25 +155,67 @@
         const signOutButton = document.getElementById('sign-out-button');
         const errorMessage = document.getElementById('error-message');
 
-        // Function to show/hide screens
+        const hamburgerMenuButton = document.getElementById('hamburger-menu-button');
+        const searchButton = document.getElementById('search-button');
+        const profilePopup = document.getElementById('profile-popup');
+        const closeProfilePopupButton = document.getElementById('close-profile-popup');
+        const profilePopupOverlay = document.getElementById('profile-popup-overlay');
+        const profileDp = document.getElementById('profile-dp');
+        const profileName = document.getElementById('profile-name');
+        const profileEmail = document.getElementById('profile-email');
+        const profileUsername = document.getElementById('profile-username');
+
+
+        // Function to show/hide screens and adjust app container styling
         function showScreen(screenId) {
             loginScreen.style.display = 'none';
             homeScreen.style.display = 'none';
-            document.getElementById(screenId).style.display = 'block';
+
+            if (screenId === 'home-screen') {
+                document.body.classList.remove('justify-center', 'items-center', 'p-4'); // Remove centering from body
+                appContainer.classList.remove('max-w-md', 'p-8', 'space-y-6', 'rounded-xl', 'shadow-lg', 'bg-gray-900', 'bg-opacity-70');
+                appContainer.classList.add('w-full', 'h-screen', 'rounded-none', 'p-0', 'flex-col', 'items-center', 'justify-start', 'bg-primary'); // Make app container full screen and primary background
+                homeScreen.style.display = 'flex'; // Use flex for home screen to manage its children (top bar, content)
+            } else if (screenId === 'login-screen') {
+                document.body.classList.add('justify-center', 'items-center', 'p-4'); // Add centering back to body
+                appContainer.classList.add('max-w-md', 'p-8', 'space-y-6', 'rounded-xl', 'shadow-lg', 'bg-gray-900', 'bg-opacity-70');
+                appContainer.classList.remove('w-full', 'h-screen', 'rounded-none', 'p-0', 'flex-col', 'items-center', 'justify-start', 'bg-primary');
+                loginScreen.style.display = 'block';
+            }
             appContainer.removeAttribute('v-cloak'); // Show app container once content is ready
         }
+
+        // Function to open the profile popup
+        function openProfilePopup() {
+            const user = auth.currentUser;
+            if (user) {
+                profileDp.src = user.photoURL || 'https://placehold.co/100x100/000/fff?text=DP';
+                profileName.textContent = user.displayName || 'Guest User';
+                profileEmail.textContent = user.email || 'No email provided';
+                // Username is not directly available from Google Auth, using a placeholder
+                profileUsername.querySelector('span').textContent = user.uid.substring(0, 8) + '...'; // Using part of UID as a placeholder
+            }
+
+            profilePopup.classList.remove('-translate-x-full');
+            profilePopupOverlay.classList.remove('hidden');
+        }
+
+        // Function to close the profile popup
+        function closeProfilePopup() {
+            profilePopup.classList.add('-translate-x-full');
+            profilePopupOverlay.classList.add('hidden');
+        }
+
 
         // Event listener for Google Sign-in
         googleSignInButton.addEventListener('click', () => {
             const provider = new firebase.auth.GoogleAuthProvider();
             auth.signInWithPopup(provider)
                 .then((result) => {
-                    // User signed in successfully. onAuthStateChanged will handle screen change.
                     console.log('User signed in:', result.user.displayName);
-                    errorMessage.textContent = ''; // Clear any previous errors
+                    errorMessage.textContent = '';
                 })
                 .catch((error) => {
-                    // Handle Errors here.
                     const errorMessageText = error.message;
                     console.error('Google Sign-in Error:', errorMessageText);
                     errorMessage.textContent = `Error: ${errorMessageText}`;
@@ -145,10 +225,9 @@
         // Event listener for Sign Out
         signOutButton.addEventListener('click', () => {
             auth.signOut().then(() => {
-                // Sign-out successful. onAuthStateChanged will handle screen change.
                 console.log('User signed out.');
+                closeProfilePopup(); // Close popup on sign out
             }).catch((error) => {
-                // An error happened.
                 console.error('Sign out error:', error);
                 errorMessage.textContent = `Sign out error: ${error.message}`;
             });
@@ -157,21 +236,18 @@
         // Firebase Auth State Observer
         auth.onAuthStateChanged((user) => {
             if (user) {
-                // User is signed in, show home screen
                 showScreen('home-screen');
             } else {
-                // User is signed out, show login screen
                 showScreen('login-screen');
             }
         });
 
-        // Add event listeners for the new buttons (optional, for future functionality)
-        document.getElementById('hamburger-menu-button').addEventListener('click', () => {
-            console.log('Hamburger menu clicked!');
-            // Add functionality for opening a side navigation menu here
-        });
+        // Add event listeners for the new buttons
+        hamburgerMenuButton.addEventListener('click', openProfilePopup);
+        closeProfilePopupButton.addEventListener('click', closeProfilePopup);
+        profilePopupOverlay.addEventListener('click', closeProfilePopup); // Close when clicking overlay
 
-        document.getElementById('search-button').addEventListener('click', () => {
+        searchButton.addEventListener('click', () => {
             console.log('Search button clicked!');
             // Add functionality for opening a search bar/modal here
         });
