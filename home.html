@@ -237,7 +237,8 @@
                         <h2 id="chat-other-name" class="text-xl font-bold text-white"></h2>
                     </div>
 
-                    <div id="messages-container" class="flex-grow overflow-y-auto p-2 bg-gray-700 rounded-lg mb-4 flex flex-col-reverse">
+                    <!-- Changed: flex-col instead of flex-col-reverse -->
+                    <div id="messages-container" class="flex-grow overflow-y-auto p-2 bg-gray-700 rounded-lg mb-4 flex flex-col">
                         <!-- Messages will be dynamically inserted here -->
                         <p class="text-gray-400 text-center py-4">No messages yet. Start a conversation!</p>
                     </div>
@@ -736,7 +737,7 @@
 
                 messageInput.value = '';
                 chatMessageStatus.textContent = '';
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                // messagesContainer.scrollTop = messagesContainer.scrollHeight; // This will be handled by displayMessages
             } catch (error) {
                 console.error("Error sending message:", error);
                 chatMessageStatus.textContent = `Error sending: ${error.message}`;
@@ -760,7 +761,7 @@
                 } else {
                     messagesContainer.innerHTML = '<p class="text-gray-400 text-center py-4">No messages yet. Start a conversation!</p>';
                 }
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                // messagesContainer.scrollTop = messagesContainer.scrollHeight; // This will be handled by displayMessages
             }, error => {
                 console.error("Error listening for messages:", error);
                 chatMessageStatus.textContent = `Error loading messages: ${error.message}`;
@@ -789,6 +790,7 @@
                 messageDiv.textContent = msg.text;
                 messagesContainer.appendChild(messageDiv);
             });
+            // Scroll to bottom after all messages are added
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
 
