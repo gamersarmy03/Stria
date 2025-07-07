@@ -83,15 +83,18 @@ async function authenticateUser() {
 
 // Google Sign-in
 googleSigninButton.addEventListener('click', async () => {
+    console.log("Google Sign-in button clicked."); // Added log
     showLoading();
     const provider = new GoogleAuthProvider();
     try {
+        console.log("Attempting to sign in with Google popup..."); // Added log
         await signInWithPopup(auth, provider);
         console.log("Signed in with Google!");
     } catch (error) {
         console.error("Google Sign-in error:", error);
         if (error.code === 'auth/popup-closed-by-user') {
             console.log("Sign-in popup closed by user.");
+            showMessage("Sign-in was cancelled. Please try again."); // User-friendly message
         } else {
             showMessage(`Error during Google Sign-in: ${error.message}`);
         }
