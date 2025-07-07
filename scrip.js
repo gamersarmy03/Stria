@@ -5,10 +5,22 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-// Firebase configuration (provided by the environment)
-const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyAXS0Mr9A9EgNHAr7tmtAkS0b2JyVdaHXc",
+  authDomain: "stria-chat.firebaseapp.com",
+  projectId: "stria-chat",
+  storageBucket: "stria-chat.firebasestorage.app",
+  messagingSenderId: "742772667117",
+  appId: "1:742772667117:web:d748e7f308e272073512e4",
+  measurementId: "G-3DX8081MT7"
+};
+
+// Initial authentication token (provided by the environment if available)
 const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'; // Use __app_id
+// App ID (provided by the environment if available, otherwise a default)
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
