@@ -57,7 +57,7 @@
         .profile-popup-leave-active {
             animation: slideOutLeft 0.3s ease-in forwards;
         }
-        /* Custom animation for settings modal */
+        /* Custom animation for modals (fade in/out) */
         @keyframes fadeIn {
             from { opacity: 0; transform: scale(0.9); }
             to { opacity: 1; transform: scale(1); }
@@ -66,11 +66,32 @@
             from { opacity: 1; transform: scale(1); }
             to { opacity: 0; transform: scale(0.9); }
         }
-        .settings-modal-enter-active {
+        .modal-enter-active {
             animation: fadeIn 0.2s ease-out forwards;
         }
-        .settings-modal-leave-active {
+        .modal-leave-active {
             animation: fadeOut 0.2s ease-in forwards;
+        }
+
+        /* Chat message styling */
+        .message-bubble {
+            max-width: 75%;
+            padding: 8px 12px;
+            border-radius: 15px;
+            margin-bottom: 8px;
+            word-wrap: break-word;
+        }
+        .message-bubble.sent {
+            background-color: #0000ff; /* Secondary color for sent */
+            align-self: flex-end;
+            margin-left: auto;
+            color: white;
+        }
+        .message-bubble.received {
+            background-color: #333333; /* Dark gray for received */
+            align-self: flex-start;
+            margin-right: auto;
+            color: white;
         }
     </style>
     <!-- Firebase SDKs -->
@@ -116,11 +137,7 @@
             <!-- Main Home Content -->
             <div class="flex-grow flex flex-col items-center justify-center p-4">
                 <h1 class="text-4xl font-bold mb-4">Stria Home</h1>
-                <p class="text-gray-300 mb-8">Welcome back! This is your current black screen. More features coming soon!</p>
-                <button id="sign-out-button"
-                        class="bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-full transition duration-300 ease-in-out shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-75">
-                    Sign Out
-                </button>
+                <p class="text-gray-300 mb-8">Welcome back! Start a chat using the search button.</p>
             </div>
 
             <!-- Profile Pop-up (Side Drawer style) -->
@@ -136,13 +153,17 @@
                         <button id="settings-button" class="w-full text-left py-2 px-4 rounded-md hover:bg-gray-700 transition duration-200 text-white">Settings</button>
                         <button class="w-full text-left py-2 px-4 rounded-md hover:bg-gray-700 transition duration-200 text-white mt-2">Privacy</button>
                         <button class="w-full text-left py-2 px-4 rounded-md hover:bg-gray-700 transition duration-200 text-white mt-2">Help</button>
+                        <button id="sign-out-button"
+                                class="w-full text-left py-2 px-4 rounded-md bg-red-600 hover:bg-red-700 text-white font-semibold mt-4 transition duration-300 ease-in-out">
+                            Sign Out
+                        </button>
                     </div>
                 </div>
             </div>
 
             <!-- Settings Modal -->
             <div id="settings-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden">
-                <div class="bg-gray-800 rounded-xl p-8 w-full max-w-sm relative shadow-lg settings-modal-enter-active">
+                <div class="bg-gray-800 rounded-xl p-8 w-full max-w-sm relative shadow-lg modal-enter-active">
                     <button id="close-settings-modal" class="absolute top-3 right-3 text-white hover:text-gray-400 text-3xl font-light">&times;</button>
                     <h2 class="text-2xl font-bold mb-6 text-white text-center">Edit Profile</h2>
 
@@ -180,6 +201,49 @@
                 </div>
             </div>
 
+            <!-- Search Modal -->
+            <div id="search-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden">
+                <div class="bg-gray-800 rounded-xl p-8 w-full max-w-md relative shadow-lg modal-enter-active">
+                    <button id="close-search-modal" class="absolute top-3 right-3 text-white hover:text-gray-400 text-3xl font-light">&times;</button>
+                    <h2 class="text-2xl font-bold mb-6 text-white text-center">Find Users</h2>
+
+                    <input type="text" id="search-username-input" placeholder="Search by username..."
+                           class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-gray-700 border-gray-600 text-white mb-4">
+
+                    <div id="search-results" class="max-h-64 overflow-y-auto bg-gray-700 rounded-lg p-2">
+                        <!-- Search results will be dynamically inserted here -->
+                        <p class="text-gray-400 text-center py-4">Start typing to find users.</p>
+                    </div>
+                    <p id="search-message" class="text-sm text-center mt-4"></p>
+                </div>
+            </div>
+
+            <!-- Chat Modal -->
+            <div id="chat-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden">
+                <div class="bg-gray-800 rounded-xl p-6 w-full max-w-md h-3/4 flex flex-col relative shadow-lg modal-enter-active">
+                    <button id="close-chat-modal" class="absolute top-3 right-3 text-white hover:text-gray-400 text-3xl font-light">&times;</button>
+                    <div class="flex items-center mb-4">
+                        <img id="chat-other-dp" src="https://placehold.co/50x50/000/fff?text=DP" alt="Other User DP" class="w-12 h-12 rounded-full mr-3 border-2 border-secondary object-cover">
+                        <h2 id="chat-other-name" class="text-xl font-bold text-white"></h2>
+                    </div>
+
+                    <div id="messages-container" class="flex-grow overflow-y-auto p-2 bg-gray-700 rounded-lg mb-4 flex flex-col-reverse">
+                        <!-- Messages will be dynamically inserted here -->
+                        <p class="text-gray-400 text-center py-4">No messages yet. Start a conversation!</p>
+                    </div>
+
+                    <div class="flex">
+                        <input type="text" id="message-input" placeholder="Type your message..."
+                               class="shadow appearance-none border rounded-l-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-gray-700 border-gray-600 text-white">
+                        <button id="send-message-button"
+                                class="bg-secondary hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-r-lg transition duration-300 ease-in-out">
+                            Send
+                        </button>
+                    </div>
+                    <p id="chat-message-status" class="text-sm text-center mt-2"></p>
+                </div>
+            </div>
+
             <!-- Overlay for closing popup when clicking outside -->
             <div id="profile-popup-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden"></div>
         </section>
@@ -202,14 +266,13 @@
 
         const auth = firebase.auth();
         const db = firebase.firestore();
-        const storage = firebase.storage(); // Initialize Firebase Storage
+        const storage = firebase.storage();
 
         // Get elements
         const appContainer = document.getElementById('app');
         const loginScreen = document.getElementById('login-screen');
         const homeScreen = document.getElementById('home-screen');
         const googleSignInButton = document.getElementById('google-signin-button');
-        const signOutButton = document.getElementById('sign-out-button');
         const errorMessage = document.getElementById('error-message');
 
         const hamburgerMenuButton = document.getElementById('hamburger-menu-button');
@@ -224,6 +287,7 @@
         const profileEmail = document.getElementById('profile-email');
         const profileUsername = document.getElementById('profile-username');
         const settingsButton = document.getElementById('settings-button');
+        const signOutButton = document.getElementById('sign-out-button'); // Moved here
 
         // Settings Modal elements
         const settingsModal = document.getElementById('settings-modal');
@@ -236,7 +300,26 @@
         const cancelSettingsButton = document.getElementById('cancel-settings-button');
         const settingsMessage = document.getElementById('settings-message');
 
+        // Search Modal elements
+        const searchModal = document.getElementById('search-modal');
+        const closeSearchModalButton = document.getElementById('close-search-modal');
+        const searchUsernameInput = document.getElementById('search-username-input');
+        const searchResultsContainer = document.getElementById('search-results');
+        const searchMessage = document.getElementById('search-message');
+
+        // Chat Modal elements
+        const chatModal = document.getElementById('chat-modal');
+        const closeChatModalButton = document.getElementById('close-chat-modal');
+        const chatOtherDp = document.getElementById('chat-other-dp');
+        const chatOtherName = document.getElementById('chat-other-name');
+        const messagesContainer = document.getElementById('messages-container');
+        const messageInput = document.getElementById('message-input');
+        const sendMessageButton = document.getElementById('send-message-button');
+        const chatMessageStatus = document.getElementById('chat-message-status');
+
         let selectedFile = null; // To store the selected DP file
+        let currentChatListener = null; // To store the Firestore snapshot listener for chat messages
+        let currentChatPartner = null; // To store the UID of the user currently being chatted with
 
         // Function to show/hide screens and adjust app container styling
         function showScreen(screenId) {
@@ -257,7 +340,7 @@
             appContainer.removeAttribute('v-cloak');
         }
 
-        // Function to open the profile popup
+        // --- Profile Popup Functions ---
         function openProfilePopup() {
             const user = auth.currentUser;
             if (user) {
@@ -265,7 +348,6 @@
                 profileName.textContent = user.displayName || 'Guest User';
                 profileEmail.textContent = user.email || 'No email provided';
 
-                // Fetch username from Firestore if it exists
                 db.collection('users').doc(user.uid).get().then(doc => {
                     if (doc.exists && doc.data().username) {
                         profileUsername.querySelector('span').textContent = doc.data().username;
@@ -282,21 +364,19 @@
             profilePopupOverlay.classList.remove('hidden');
         }
 
-        // Function to close the profile popup
         function closeProfilePopup() {
             profilePopup.classList.add('-translate-x-full');
             profilePopupOverlay.classList.add('hidden');
         }
 
-        // Function to open the settings modal
+        // --- Settings Modal Functions ---
         function openSettingsModal() {
-            closeProfilePopup(); // Close profile popup when opening settings
+            closeProfilePopup();
             const user = auth.currentUser;
             if (user) {
                 settingsDpPreview.src = user.photoURL || 'https://placehold.co/100x100/000/fff?text=DP';
                 settingsNameInput.value = user.displayName || '';
 
-                // Load username from Firestore
                 db.collection('users').doc(user.uid).get().then(doc => {
                     if (doc.exists && doc.data().username) {
                         settingsUsernameInput.value = doc.data().username;
@@ -308,24 +388,76 @@
                     settingsUsernameInput.value = '';
                 });
             }
-            settingsMessage.textContent = ''; // Clear previous messages
+            settingsMessage.textContent = '';
             settingsModal.classList.remove('hidden');
-            settingsModal.classList.add('settings-modal-enter-active'); // Apply enter animation
+            settingsModal.classList.add('modal-enter-active');
         }
 
-        // Function to close the settings modal
         function closeSettingsModal() {
-            settingsModal.classList.remove('settings-modal-enter-active');
-            settingsModal.classList.add('settings-modal-leave-active'); // Apply leave animation
+            settingsModal.classList.remove('modal-enter-active');
+            settingsModal.classList.add('modal-leave-active');
             settingsModal.addEventListener('animationend', function handler() {
                 settingsModal.classList.add('hidden');
-                settingsModal.classList.remove('settings-modal-leave-active');
+                settingsModal.classList.remove('modal-leave-active');
                 settingsModal.removeEventListener('animationend', handler);
             });
-            selectedFile = null; // Clear selected file
-            dpUploadInput.value = ''; // Clear file input
+            selectedFile = null;
+            dpUploadInput.value = '';
         }
 
+        // --- Search Modal Functions ---
+        function openSearchModal() {
+            searchModal.classList.remove('hidden');
+            searchModal.classList.add('modal-enter-active');
+            searchUsernameInput.value = ''; // Clear previous search
+            searchResultsContainer.innerHTML = '<p class="text-gray-400 text-center py-4">Start typing to find users.</p>';
+            searchMessage.textContent = '';
+        }
+
+        function closeSearchModal() {
+            searchModal.classList.remove('modal-enter-active');
+            searchModal.classList.add('modal-leave-active');
+            searchModal.addEventListener('animationend', function handler() {
+                searchModal.classList.add('hidden');
+                searchModal.classList.remove('modal-leave-active');
+                searchModal.removeEventListener('animationend', handler);
+            });
+        }
+
+        // --- Chat Modal Functions ---
+        function openChatModal(chatPartnerUser) {
+            closeSearchModal(); // Close search modal when opening chat
+            chatOtherDp.src = chatPartnerUser.photoURL || 'https://placehold.co/50x50/000/fff?text=DP';
+            chatOtherName.textContent = chatPartnerUser.displayName || chatPartnerUser.username || 'Unknown User';
+            currentChatPartner = chatPartnerUser; // Store the chat partner object
+
+            messagesContainer.innerHTML = '<p class="text-gray-400 text-center py-4">Loading messages...</p>';
+            messageInput.value = '';
+            chatMessageStatus.textContent = '';
+
+            chatModal.classList.remove('hidden');
+            chatModal.classList.add('modal-enter-active');
+
+            // Start listening for messages
+            listenForMessages(auth.currentUser.uid, chatPartnerUser.uid);
+        }
+
+        function closeChatModal() {
+            chatModal.classList.remove('modal-enter-active');
+            chatModal.classList.add('modal-leave-active');
+            chatModal.addEventListener('animationend', function handler() {
+                chatModal.classList.add('hidden');
+                chatModal.classList.remove('modal-leave-active');
+                chatModal.removeEventListener('animationend', handler);
+                if (currentChatListener) {
+                    currentChatListener(); // Unsubscribe from previous chat listener
+                    currentChatListener = null;
+                }
+                currentChatPartner = null;
+            });
+        }
+
+        // --- Firebase Core Logic ---
         // Event listener for Google Sign-in
         googleSignInButton.addEventListener('click', () => {
             const provider = new firebase.auth.GoogleAuthProvider();
@@ -333,7 +465,7 @@
                 .then((result) => {
                     console.log('User signed in:', result.user.displayName);
                     errorMessage.textContent = '';
-                    // Create a user document in Firestore if it doesn't exist
+                    // Create/update user document in Firestore
                     const userRef = db.collection('users').doc(result.user.uid);
                     userRef.get().then(docSnapshot => {
                         if (!docSnapshot.exists) {
@@ -342,6 +474,13 @@
                                 email: result.user.email,
                                 photoURL: result.user.photoURL,
                                 username: null // Initialize username as null
+                            });
+                        } else {
+                            // Update existing user data if needed (e.g., if DP or name changed in Google)
+                            userRef.update({
+                                name: result.user.displayName,
+                                photoURL: result.user.photoURL,
+                                email: result.user.email // Ensure email is also updated
                             });
                         }
                     });
@@ -358,7 +497,9 @@
             auth.signOut().then(() => {
                 console.log('User signed out.');
                 closeProfilePopup();
-                closeSettingsModal(); // Ensure settings modal is also closed
+                closeSettingsModal();
+                closeSearchModal();
+                closeChatModal();
             }).catch((error) => {
                 console.error('Sign out error:', error);
                 errorMessage.textContent = `Sign out error: ${error.message}`;
@@ -374,7 +515,7 @@
             }
         });
 
-        // Add event listeners for the new buttons
+        // --- Event Listeners for UI Interactions ---
         hamburgerMenuButton.addEventListener('click', openProfilePopup);
         closeProfilePopupButton.addEventListener('click', closeProfilePopup);
         profilePopupOverlay.addEventListener('click', closeProfilePopup);
@@ -383,12 +524,18 @@
         closeSettingsModalButton.addEventListener('click', closeSettingsModal);
         cancelSettingsButton.addEventListener('click', closeSettingsModal);
 
-        searchButton.addEventListener('click', () => {
-            console.log('Search button clicked!');
-            // Add functionality for opening a search bar/modal here
+        searchButton.addEventListener('click', openSearchModal);
+        closeSearchModalButton.addEventListener('click', closeSearchModal);
+
+        closeChatModalButton.addEventListener('click', closeChatModal);
+        sendMessageButton.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
         });
 
-        // Handle DP file selection
+        // --- Settings Logic ---
         dpUploadInput.addEventListener('change', (event) => {
             selectedFile = event.target.files[0];
             if (selectedFile) {
@@ -400,7 +547,6 @@
             }
         });
 
-        // Save Settings logic
         saveSettingsButton.addEventListener('click', async () => {
             const user = auth.currentUser;
             if (!user) {
@@ -411,48 +557,210 @@
 
             const newName = settingsNameInput.value.trim();
             const newUsername = settingsUsernameInput.value.trim();
-            let photoURL = user.photoURL; // Default to current photo URL
+            let photoURL = user.photoURL;
 
             settingsMessage.textContent = 'Saving...';
-            settingsMessage.style.color = '#0000ff'; // Blue for saving status
+            settingsMessage.style.color = '#0000ff';
 
             try {
-                // 1. Upload new DP if selected
                 if (selectedFile) {
                     const storageRef = storage.ref();
                     const dpRef = storageRef.child(`profile_pictures/${user.uid}/${selectedFile.name}`);
                     const uploadTask = dpRef.put(selectedFile);
 
-                    await uploadTask; // Wait for upload to complete
-                    photoURL = await dpRef.getDownloadURL(); // Get the new download URL
+                    await uploadTask;
+                    photoURL = await dpRef.getDownloadURL();
                 }
 
-                // 2. Update Firebase Auth profile (name and photoURL)
                 await user.updateProfile({
                     displayName: newName,
                     photoURL: photoURL
                 });
 
-                // 3. Update username in Firestore
                 const userDocRef = db.collection('users').doc(user.uid);
                 await userDocRef.set({
                     username: newUsername,
-                    name: newName, // Also update name in Firestore for consistency
-                    photoURL: photoURL // Also update photoURL in Firestore for consistency
-                }, { merge: true }); // Use merge to only update specified fields
+                    name: newName,
+                    photoURL: photoURL
+                }, { merge: true });
 
                 settingsMessage.textContent = 'Profile updated successfully!';
-                settingsMessage.style.color = '#4CAF50'; // Green for success
+                settingsMessage.style.color = '#4CAF50';
 
-                // Update profile popup immediately after saving
-                openProfilePopup(); // Re-open to refresh data
-                closeSettingsModal(); // Close settings modal
+                openProfilePopup();
+                closeSettingsModal();
             } catch (error) {
                 console.error("Error saving profile:", error);
                 settingsMessage.textContent = `Error: ${error.message}`;
                 settingsMessage.style.color = '#ff4d4d';
             }
         });
+
+        // --- Search Logic ---
+        searchUsernameInput.addEventListener('input', debounce(async (event) => {
+            const searchTerm = event.target.value.trim();
+            searchResultsContainer.innerHTML = ''; // Clear previous results
+            searchMessage.textContent = '';
+
+            if (searchTerm.length < 2) {
+                searchResultsContainer.innerHTML = '<p class="text-gray-400 text-center py-4">Start typing to find users.</p>';
+                return;
+            }
+
+            const currentUser = auth.currentUser;
+            if (!currentUser) {
+                searchMessage.textContent = 'Please log in to search for users.';
+                searchMessage.style.color = '#ff4d4d';
+                return;
+            }
+
+            try {
+                // Fetch users from Firestore where username starts with searchTerm
+                // Note: Firestore does not support "starts with" queries directly without indexes.
+                // For a true "starts with", you'd need to use a range query or a separate search service.
+                // This example uses a simple equality check for demonstration.
+                // For more robust search, consider Algolia or a server-side index.
+                const usersRef = db.collection('users');
+                const querySnapshot = await usersRef
+                    .where('username', '>=', searchTerm)
+                    .where('username', '<=', searchTerm + '\uf8ff') // '\uf8ff' is a high-value Unicode character
+                    .limit(10)
+                    .get();
+
+                if (querySnapshot.empty) {
+                    searchResultsContainer.innerHTML = '<p class="text-gray-400 text-center py-4">No users found.</p>';
+                    return;
+                }
+
+                querySnapshot.forEach(doc => {
+                    const userData = doc.data();
+                    const userId = doc.id;
+
+                    // Don't show current user in search results
+                    if (userId === currentUser.uid) {
+                        return;
+                    }
+
+                    const userResultDiv = document.createElement('div');
+                    userResultDiv.classList.add('flex', 'items-center', 'p-3', 'rounded-lg', 'hover:bg-gray-600', 'cursor-pointer', 'mb-2', 'transition', 'duration-200');
+                    userResultDiv.innerHTML = `
+                        <img src="${userData.photoURL || 'https://placehold.co/50x50/000/fff?text=DP'}" alt="DP" class="w-10 h-10 rounded-full mr-3 border border-gray-500 object-cover">
+                        <div>
+                            <p class="text-white font-semibold">${userData.name || 'Unknown'}</p>
+                            <p class="text-gray-400 text-sm">@${userData.username || 'N/A'}</p>
+                        </div>
+                    `;
+                    userResultDiv.addEventListener('click', () => {
+                        openChatModal({
+                            uid: userId,
+                            displayName: userData.name,
+                            photoURL: userData.photoURL,
+                            username: userData.username
+                        });
+                    });
+                    searchResultsContainer.appendChild(userResultDiv);
+                });
+
+            } catch (error) {
+                console.error("Error searching users:", error);
+                searchMessage.textContent = `Error searching: ${error.message}`;
+                searchMessage.style.color = '#ff4d4d';
+            }
+        }, 300)); // Debounce search input to avoid too many Firestore calls
+
+        // Debounce function
+        function debounce(func, delay) {
+            let timeout;
+            return function(...args) {
+                const context = this;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), delay);
+            };
+        }
+
+        // --- Chat Logic ---
+        async function sendMessage() {
+            const messageText = messageInput.value.trim();
+            if (!messageText || !auth.currentUser || !currentChatPartner) {
+                chatMessageStatus.textContent = 'Cannot send empty message or no chat partner selected.';
+                chatMessageStatus.style.color = '#ff4d4d';
+                return;
+            }
+
+            const senderId = auth.currentUser.uid;
+            const receiverId = currentChatPartner.uid;
+
+            // Determine chat ID (always sorted to ensure consistent ID for a pair)
+            const chatId = [senderId, receiverId].sort().join('_');
+
+            try {
+                const chatDocRef = db.collection('chats').doc(chatId);
+                const message = {
+                    senderId: senderId,
+                    text: messageText,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                await chatDocRef.set({
+                    participants: [senderId, receiverId],
+                    lastMessage: messageText,
+                    lastMessageTimestamp: message.timestamp,
+                    messages: firebase.firestore.FieldValue.arrayUnion(message) // Add message to array
+                }, { merge: true }); // Merge to update fields or create if not exists
+
+                messageInput.value = ''; // Clear input
+                chatMessageStatus.textContent = ''; // Clear status
+                messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll to bottom
+            } catch (error) {
+                console.error("Error sending message:", error);
+                chatMessageStatus.textContent = `Error sending: ${error.message}`;
+                chatMessageStatus.style.color = '#ff4d4d';
+            }
+        }
+
+        function listenForMessages(user1Id, user2Id) {
+            if (currentChatListener) {
+                currentChatListener(); // Unsubscribe from any existing listener
+            }
+
+            const chatId = [user1Id, user2Id].sort().join('_');
+            const chatDocRef = db.collection('chats').doc(chatId);
+
+            currentChatListener = chatDocRef.onSnapshot(docSnapshot => {
+                if (docSnapshot.exists) {
+                    const chatData = docSnapshot.data();
+                    const messages = chatData.messages || [];
+                    displayMessages(messages);
+                } else {
+                    messagesContainer.innerHTML = '<p class="text-gray-400 text-center py-4">No messages yet. Start a conversation!</p>';
+                }
+                messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll to bottom on new messages
+            }, error => {
+                console.error("Error listening for messages:", error);
+                chatMessageStatus.textContent = `Error loading messages: ${error.message}`;
+                chatMessageStatus.style.color = '#ff4d4d';
+            });
+        }
+
+        function displayMessages(messages) {
+            messagesContainer.innerHTML = ''; // Clear existing messages
+            if (messages.length === 0) {
+                messagesContainer.innerHTML = '<p class="text-gray-400 text-center py-4">No messages yet. Start a conversation!</p>';
+                return;
+            }
+
+            // Sort messages by timestamp if they are not already (Firestore arrayUnion doesn't guarantee order)
+            messages.sort((a, b) => (a.timestamp?.toMillis() || 0) - (b.timestamp?.toMillis() || 0));
+
+            messages.forEach(msg => {
+                const messageDiv = document.createElement('div');
+                const isSent = msg.senderId === auth.currentUser.uid;
+                messageDiv.classList.add('message-bubble', isSent ? 'sent' : 'received');
+                messageDiv.textContent = msg.text;
+                messagesContainer.appendChild(messageDiv);
+            });
+            messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll to bottom
+        }
     </script>
 </body>
 </html>
